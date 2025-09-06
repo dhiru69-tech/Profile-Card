@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dhiru • Cyber Profile Card</title>
+  <meta name="description" content="Animated cybersecurity-themed profile card for Dhiru (avatar, name, bio, button, social links) with dark/light mode" />
+  <style>
+    /* ------------------------------------------------------
+       Dhiru — Cybersecurity Profile Card (Dark/Light)
+       - Neon glass card, 3D tilt, radar/typing/packet FX
+       - Dark/Light theme toggle with smooth transitions
+       - Responsive & accessible, single-file
+    ------------------------------------------------------- */
+
+    /* Base (theme-agnostic) variables */
+    :root {
+      --h: 180;                    /* accent hue */
+      --s: 92%;
+      --l: 56%;
+      --accent: hsl(var(--h) var(--s) var(--l));
+      --accent-2: hsl(calc(var(--h) + 40) 95% 55%);
+      --accent-3: hsl(calc(var(--h) - 40) 95% 60%);
+      --radius: 22px;
+      --avatar-url: none;          /* set url('...') to use your image */
+      --transition-fast: 240ms cubic-bezier(.2,.7,.2,1);
+    }
+
+    /* Dark theme variables */
+    html[data-theme="dark"] {
+      --bg: #050608;
+      --text: 230 240 255;         /* rgb */
+      --muted: 160 180 200;        /* rgb */
+      --card-bg: rgba(0,20,30,.55);
+      --border: rgba(0,255,255,.22);
+      --glow: 0 20px 40px rgba(0,200,255,.22);
+      --grid-line: rgba(0,255,255,.055);
+      --aurora-1: rgba(255,0,180,.18);
+      --aurora-2: rgba(0,180,255,.18);
+      --terminal-bg: #081018;
+      --icon-sheen: rgba(0,255,255,.45);
+      --icon-sheen-2: rgba(255,0,180,.35);
+    }
+
+    /* Light theme variables */
+    html[data-theme="light"] {
+      --bg: #f6f9fc;
+      --text: 20 28 36;
+      --muted: 90 110 130;
+      --card-bg: rgba(255,255,255,.7);
+      --border: rgba(0,120,170,.22);
+      --glow: 0 18px 36px rgba(0,140,220,.18);
+      --grid-line: rgba(0,120,170,.06);
+      --aurora-1: rgba(255,160,210,.18);
+      --aurora-2: rgba(120,200,255,.18);
+      --terminal-bg: #ffffff;
+      --icon-sheen: rgba(0,160,220,.35);
+      --icon-sheen-2: rgba(255,120,190,.28);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { margin:0; font: 500 16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial; color: rgb(var(--text)); background:var(--bg); overflow-x:hidden; transition: background var(--transition-fast), color var(--transition-fast); }
+
+    /* Background: aurora + hologrid. These adapt to theme via CSS vars. */
+    body::before, body::after { content:""; position:fixed; inset:0; pointer-events:none; z-index:-2; transition: opacity var(--transition-fast), filter var(--transition-fast); }
+    body::before { background:
+      radial-gradient(1000px 700px at 70% 10%, var(--aurora-1), transparent 40%),
+      radial-gradient(1200px 800px at 20% 15%, var(--aurora-2), transparent 45%);
+    }
+    body::after  { background:
+      repeating-linear-gradient(transparent 0 22px, var(--grid-line) 22px 23px),
+      repeating-linear-gradient(90deg, transparent 0 22px, var(--grid-line) 22px 23px);
+      transform: perspective(900px) rotateX(60deg) translateY(-15vh);
+      filter: drop-shadow(0 50px 30px rgba(0,0,0,.08));
+      animation: gridFloat 14s ease-in-out infinite;
+    }
+    @keyframes gridFloat { 0%,100%{ transform: perspective(900px) rotateX(60deg) translateY(-15vh);} 50%{ transform: perspective(900px) rotateX(60deg) translateY(-12vh);} }
+
+    .scene{min-height:100svh;display:grid;place-items:center;padding:72px 32px 32px;}
+
+    /* --- Header with theme toggle --- */
+    .topbar{position:fixed; inset:0 0 auto 0; height:56px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 16px; z-index:10; backdrop-filter: blur(10px) saturate(120%);}
+    .brand{font-weight:800; letter-spacing:.4px;}
+    .theme-toggle{ --w:58px; --h:30px; position:relative; width:var(--w); height:var(--h); border-radius:999px; border:1px solid var(--border); background:linear-gradient(180deg, rgba(255,255,255,.06), transparent); cursor:pointer; box-shadow: inset 0 0 18px rgba(0,0,0,.08); transition: transform var(--transition-fast); }
+    .theme-toggle:active{ transform: scale(.98); }
+    .theme-thumb{ position:absolute; top:2px; left:2px; width:26px; height:26px; border-radius:50%; background: linear-gradient(180deg, #fff, #ddd); box-shadow: 0 6px 16px rgba(0,0,0,.18); display:grid; place-items:center; transition: left var(--transition-fast), transform var(--transition-fast), background var(--transition-fast); }
+    html[data-theme="dark"] .theme-thumb{ background: radial-gradient(circle at 30% 30%, #ffe28a 0%, #ffb300 60%, #ff9100 100%); }
+    html[data-theme="light"] .theme-thumb{ background: radial-gradient(circle at 30% 30%, #bfe6ff 0%, #8fd0ff 60%, #66b9ff 100%); }
+    .theme-thumb i{ font-size:14px; }
+    html[data-theme="light"] .theme-thumb{ left: calc(100% - 28px); }
+
+    .card{background:var(--card-bg);backdrop-filter:blur(18px) saturate(130%);border-radius:var(--radius);box-shadow:var(--glow);max-width:980px;width:min(94vw,980px);display:grid;grid-template-columns:1fr 1.4fr;gap:clamp(18px,3vw,32px);position:relative;overflow:hidden;isolation:isolate;transform-style:preserve-3d;transition: box-shadow var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);}
+    .card::before{content:"";position:absolute;inset:0;padding:1px;border-radius:inherit;background:conic-gradient(from 0deg, rgba(0,255,255,.65), rgba(0,180,255,.65), rgba(255,0,180,.65), rgba(0,255,180,.65), rgba(0,255,255,.65)); -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; animation:borderSpin 8s linear infinite; opacity:.85;}
+    @keyframes borderSpin {to{transform:rotate(360deg)}}
+
+    .left{display:grid;place-items:center;gap:14px;padding:16px;}
+    .avatar-wrap{position:relative;display:grid;place-items:center; width: clamp(140px, 24vw, 220px); aspect-ratio:1/1; transform: translateZ(40px);} 
+    .avatar{width:85%;aspect-ratio:1/1;border-radius:50%;background:var(--avatar-url), radial-gradient(120px 120px at 30% 30%, #0ff 0%, #00f 45%, #001 100%);background-size:cover;box-shadow:inset 0 0 0 2px rgba(255,255,255,.08), 0 10px 30px rgba(0,0,0,.2);}    
+    .ring,.ring2{position:absolute;inset:0;border-radius:50%;pointer-events:none;}
+    .ring{padding:6px;background:conic-gradient(from 0deg, var(--accent), transparent 40%, var(--accent-2), transparent 70%, var(--accent-3)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; filter: drop-shadow(0 0 12px rgba(0,255,255,.6)); animation: spin 9s linear infinite;}
+    .ring2{inset:14%;padding:4px;background:conic-gradient(from 180deg, rgba(255,0,180,.9), transparent 45%, rgba(0,255,180,.9), transparent 75%); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; filter: drop-shadow(0 0 8px rgba(255,0,180,.45)); animation: spinReverse 12s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}} @keyframes spinReverse{to{transform:rotate(-360deg)}}
+
+    .name{font-size: clamp(28px, 5vw, 46px); font-weight: 900; letter-spacing:.5px; text-shadow:0 0 18px rgba(0,255,255,.25);} 
+    .glitch{position:relative}
+    .glitch::before,.glitch::after{content:attr(data-text);position:absolute;inset:0;pointer-events:none}
+    .glitch::before{color:rgba(0,255,255,.85);transform:translate(1px,0);mix-blend-mode:screen;animation:gl1 3s infinite}
+    .glitch::after{color:rgba(255,0,120,.8);transform:translate(-1px,0);mix-blend-mode:screen;animation:gl2 2.7s infinite}
+    @keyframes gl1{0%,100%{clip-path:inset(0 0 0 0)}10%{clip-path:inset(0 80% 0 0)}26%{clip-path:inset(0 0 0 0)}36%{transform:translate(2px,-1px)}}
+    @keyframes gl2{0%,100%{clip-path:inset(0 0 0 0)}14%{clip-path:inset(0 0 70% 0)}40%{transform:translate(-2px,1px)}}
+
+    .title{margin-top:4px;font-weight:650;font-size:clamp(14px,2.2vw,18px);color:rgb(var(--muted));}
+
+    /* Inline social bar under name */
+    .social-inline{display:flex;gap:12px;margin-top:6px}
+    .social-inline a{--size:36px;width:var(--size);height:var(--size);display:grid;place-items:center;border-radius:50%;position:relative;color:var(--accent);text-decoration:none;transition:transform .25s ease}
+    .social-inline a::before{content:"";position:absolute;inset:-2px;border-radius:inherit;background:conic-gradient(from 0deg, var(--icon-sheen), transparent 35%, var(--icon-sheen-2));filter:blur(6px);opacity:.8;transition:opacity .25s ease}
+    .social-inline a:hover{transform:translateY(-3px) scale(1.05)}
+    .social-inline a:hover::before{opacity:1}
+
+    .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+    .chip{padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:linear-gradient(180deg, rgba(255,255,255,.05), transparent);box-shadow:inset 0 0 18px rgba(0,255,255,.06);font-size:12.5px;letter-spacing:.3px;transition:border-color var(--transition-fast), background var(--transition-fast)}
+    .chip.kali{animation:flicker 3s infinite steps(50)}
+    .chip.termux{animation:pulseChip 2.8s infinite alternate}
+    .chip.nmap{position:relative;overflow:hidden}
+    .chip.nmap::after{content:"";position:absolute;inset:-40% -70%;background:conic-gradient(from 0deg, rgba(0,255,255,.35), transparent 35%);animation:radar 4s linear infinite}
+    @keyframes flicker { 0%,100%{ text-shadow: 0 0 6px rgba(0,255,255,.6);} 5%{ text-shadow: none; } 6%{ text-shadow:0 0 8px rgba(255,0,180,.6);} }
+    @keyframes pulseChip{from{transform:scale(1)}to{transform:scale(1.08)}}
+    @keyframes radar{to{transform:rotate(360deg)}}
+
+    .bio{margin-top:10px;color:rgb(var(--text)/.85);font-size:clamp(14px,2.1vw,16px)}
+
+    .right{padding:16px}
+
+    .status{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;margin-top:8px;border:1px solid var(--border);background:linear-gradient(180deg, rgba(255,255,255,.04), transparent);box-shadow:inset 0 0 18px rgba(0,255,255,.05);transition:border-color var(--transition-fast), background var(--transition-fast)}
+    .pulse{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(0,255,255,.6);animation:pulse 2s infinite}
+    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(0,255,255,.6)}70%{box-shadow:0 0 0 16px rgba(0,255,255,0)}100%{box-shadow:0 0 0 0 rgba(0,255,255,0)}}
+
+    .terminal{margin-top:16px;background:var(--terminal-bg);border-radius:14px;border:1px solid var(--border);overflow:hidden;box-shadow:inset 0 0 18px rgba(0,0,0,.05);transition: background var(--transition-fast), border-color var(--transition-fast)}
+    .term-bar{display:flex;gap:8px;align-items:center;padding:8px 12px;background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02))}
+    .dot{width:10px;height:10px;border-radius:50%}
+    .dot:nth-child(1){background:#ff5f57}.dot:nth-child(2){background:#febc2e}.dot:nth-child(3){background:#28c840}
+    .term-body{padding:14px 16px 18px;font-family:ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;font-size:13.5px;color:#0d2b3a}
+    html[data-theme="dark"] .term-body{ color:#bfefff }
+    .line{opacity:0;transform:translateX(-10px)}
+    .line.show{animation:lineIn .6s forwards}
+    @keyframes lineIn{to{opacity:1;transform:translateX(0)}}
+    .caret{display:inline-block;width:9px;height:1.15em;margin-left:2px;background:currentColor;animation:blink 1s steps(1,end) infinite;vertical-align:-2px}
+    @keyframes blink{50%{opacity:0}}
+    .highlight{color:var(--accent)}
+
+    /* Tool cards — FX per tool */
+    .tool-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:16px}
+    .tool-card{position:relative;border:1px solid var(--border);border-radius:16px;background:linear-gradient(180deg, rgba(255,255,255,.04), transparent);box-shadow:inset 0 0 18px rgba(0,0,0,.06);padding:14px;overflow:hidden;transition:transform .25s ease, box-shadow .25s ease, border-color var(--transition-fast), background var(--transition-fast);cursor:default}
+    .tool-card:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(0,200,255,.16)}
+    .tool-card h3{margin:8px 0 2px;font-size:1rem}
+    .tool-card p{margin:0;font-size:.85rem;color:rgb(var(--muted))}
+    .icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(180deg, rgba(0,255,255,.18), rgba(0,140,255,.18));box-shadow:inset 0 0 12px rgba(0,255,255,.18), 0 0 16px rgba(0,255,255,.15)}
+
+    /* Kali — glitch border */
+    .tool-card.kali::before{content:"";position:absolute;inset:-2px;border-radius:inherit;padding:1px;background:repeating-conic-gradient(from 0deg, rgba(0,255,255,.45) 0 6deg, transparent 6deg 12deg); -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; filter:drop-shadow(0 0 10px rgba(0,255,255,.35)); animation:jit 2s infinite steps(30)}
+    @keyframes jit{50%{opacity:.5}100%{opacity:1}}
+
+    /* Termux — CSS typing line */
+    .tool-card.termux .typed{margin-top:6px;display:block;white-space:nowrap;overflow:hidden;border-right:2px solid rgba(191,239,255,.8)}
+    .tool-card.termux .typed::after{content:attr(data-text)}
+    .tool-card.termux:hover .typed{animation:typing 4s steps(36,end) infinite alternate, caret 1s steps(1,end) infinite}
+    @keyframes typing{from{width:0ch}to{width:36ch}}
+    @keyframes caret{50%{border-color:transparent}}
+
+    /* Nmap — radar sweep */
+    .tool-card.nmap{--radar: rgba(0,255,255,.28)}
+    .tool-card.nmap .radar{position:absolute;inset:0;border-radius:inherit;pointer-events:none}
+    .tool-card.nmap .radar::before{content:"";position:absolute;inset:0;background:radial-gradient(120px 120px at 30% 70%, var(--radar), transparent 70%);mix-blend-mode:screen;filter:blur(10px)}
+    .tool-card.nmap .radar::after{content:"";position:absolute;inset:-40% -70%;background:conic-gradient(from 0deg, rgba(0,255,255,.45), transparent 35%);animation:radar 4.8s linear infinite}
+
+    /* Burp — packet bursts */
+    .tool-card.burp::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg, transparent 0 8px, rgba(255,0,180,.08) 8px 10px);mix-blend-mode:screen;opacity:.6;animation:slidePackets 3.2s linear infinite}
+    @keyframes slidePackets{to{transform:translateX(12px)}}
+
+    .actions{margin-top:18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .btn-primary{padding:12px 18px;border:none;border-radius:14px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;background:linear-gradient(180deg, rgba(0,255,255,.18), rgba(0,140,255,.18)), linear-gradient(90deg, var(--accent-3), var(--accent), var(--accent-2));color:#00131a;box-shadow:0 10px 30px rgba(0,200,255,.25);cursor:pointer;overflow:hidden;position:relative;transform:translateZ(60px)}
+    .btn-primary::before{content:"";position:absolute;inset:-60% -20%;background:conic-gradient(from 210deg at 50% 50%, transparent 0 15%, rgba(255,255,255,.8) 16% 20%, transparent 21% 35%, rgba(255,255,255,.9) 36% 40%, transparent 41% 100%);mix-blend-mode:overlay;animation:sweep 2.8s linear infinite}
+    @keyframes sweep{to{transform:rotate(360deg)}}
+    .btn-primary:active{transform:translateZ(60px) scale(.985)}
+
+    .ghost-link{color:var(--accent);opacity:.9;text-decoration:none;font-weight:700}
+    .ghost-link:hover{text-decoration:underline}
+
+    .socials{display:flex;gap:16px;margin-top:12px}
+    .socials a{--size:42px;width:var(--size);height:var(--size);display:grid;place-items:center;border-radius:50%;position:relative;color:var(--accent);text-decoration:none;transition:transform .25s ease}
+    .socials a::before{content:"";position:absolute;inset:-2px;border-radius:inherit;background:conic-gradient(from 0deg, var(--icon-sheen), transparent 35%, var(--icon-sheen-2));filter:blur(6px);opacity:.8;transition:opacity .25s ease}
+    .socials a:hover{transform:translateY(-3px) scale(1.05)}
+    .socials a:hover::before{opacity:1}
+
+    @media (max-width: 860px){ .card{grid-template-columns:1fr;text-align:center} .right{order:3} .left{order:1} }
+    @media (prefers-reduced-motion: reduce){ *{animation:none!important; transition:none!important} }
+  </style>
+  <!-- Font Awesome for icons (GitHub / LinkedIn / Instagram / Terminal / Linux) -->
+  <script src="https://kit.fontawesome.com/2c7fc28a58.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <!-- Top bar with theme toggle -->
+  <header class="topbar" role="banner">
+    <div class="brand">Dhiru • Profile</div>
+    <button id="themeBtn" class="theme-toggle" aria-label="Toggle dark/light theme" title="Toggle theme">
+      <span class="theme-thumb"><i class="fas fa-moon" aria-hidden="true"></i></span>
+    </button>
+  </header>
+
+  <main class="scene">
+    <article class="card" aria-labelledby="name" aria-describedby="bio">
+      <section class="left">
+        <div class="avatar-wrap" aria-hidden="true">
+          <div class="ring"></div>
+          <div class="avatar" role="img" aria-label="Avatar of Dhiru"></div>
+          <div class="ring2"></div>
+        </div>
+        <h1 class="name glitch" id="name" data-text="Dhiru">Dhiru</h1>
+        <!-- Social bar directly under the name -->
+        <nav class="social-inline" aria-label="Primary social links">
+          <a href="https://github.com/your-username" target="_blank" rel="noopener" aria-label="GitHub"><i class="fab fa-github"></i></a>
+          <a href="https://linkedin.com/in/your-username" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+          <a href="https://instagram.com/your-username" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="mailto:you@example.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
+        </nav>
+        <p class="title">Cybersecurity Student · Blue/Red Team Enthusiast</p>
+        <div class="chips" aria-label="Core tools">
+          <span class="chip kali">Kali Linux</span>
+          <span class="chip termux">Termux</span>
+          <span class="chip nmap">Nmap</span>
+          <span class="chip">Burp Suite</span>
+          <span class="chip">Botnet research (ethical)</span>
+        </div>
+      </section>
+
+      <section class="right">
+        <p class="bio" id="bio">
+          I explore networks, break things (in labs), and help fix them. Passionate about reconnaissance, web app security, and automating repeatable tasks. Always learning, always documenting.
+        </p>
+
+        <div class="status">
+          <div class="pulse" aria-hidden="true"></div>
+          <div class="stat-text">Status: <strong>Online</strong> — open to collaborations & CTF teams</div>
+          <div class="stat-text">IST</div>
+        </div>
+
+        <div class="terminal" aria-label="Terminal snippet">
+          <div class="term-bar">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+          <div class="term-body" id="term-body">
+            <div class="line"><span class="highlight">$</span> whoami && hostname</div>
+            <div class="line">dhiru@cyber-node</div>
+            <div class="line"><span class="highlight">$</span> nmap -A target.local</div>
+            <div class="line">Discovered services: http, ssh, <em>interesting ports...</em><span class="caret" aria-hidden="true"></span></div>
+          </div>
+        </div>
+
+        <!-- Tool cards with FX -->
+        <div class="tool-grid" aria-label="Tool highlights">
+          <article class="tool-card kali">
+            <div class="icon"><i class="fab fa-linux" aria-hidden="true"></i></div>
+            <h3>Kali Linux</h3>
+            <p>Pen-testing distro • Wi‑Fi • Forensics</p>
+          </article>
+
+          <article class="tool-card termux">
+            <div class="icon"><i class="fas fa-terminal" aria-hidden="true"></i></div>
+            <h3>Termux</h3>
+            <p class="typed" data-text="$ pkg update && pkg upgrade; nmap -sC -sV 10.10.10.10"></p>
+          </article>
+
+          <article class="tool-card nmap">
+            <div class="icon"><i class="fas fa-network-wired" aria-hidden="true"></i></div>
+            <h3>Nmap</h3>
+            <p>Port scanner • NSE • Recon</p>
+            <div class="radar" aria-hidden="true"></div>
+          </article>
+
+          <article class="tool-card burp">
+            <div class="icon"><i class="fas fa-bug" aria-hidden="true"></i></div>
+            <h3>Burp Suite</h3>
+            <p>Proxy • Repeater • Intruder</p>
+          </article>
+        </div>
+
+        <div class="actions">
+          <button class="btn-primary" id="connectBtn" aria-label="Connect with Dhiru">Connect</button>
+          <a class="ghost-link" href="#" aria-label="View portfolio (placeholder link)">Portfolio →</a>
+        </div>
+
+        <!-- Footer socials -->
+        <nav class="socials" aria-label="Social links">
+          <a href="https://github.com/your-username" target="_blank" rel="noopener" aria-label="GitHub"><i class="fab fa-github"></i></a>
+          <a href="https://linkedin.com/in/your-username" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+          <a href="https://instagram.com/your-username" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+        </nav>
+      </section>
+    </article>
+  </main>
+
+  <script>
+    // --- Theme persistence & toggle ---
+    (function themeInit(){
+      const root = document.documentElement;
+      const btn = document.getElementById('themeBtn');
+      const thumbIcon = btn.querySelector('i');
+
+      // Determine initial theme: saved > system preference > default 'dark'
+      const saved = localStorage.getItem('theme');
+      const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+      const initial = saved || (prefersLight ? 'light' : 'dark');
+      applyTheme(initial);
+
+      btn.addEventListener('click', () => {
+        const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        applyTheme(next);
+        localStorage.setItem('theme', next);
+      });
+
+      function applyTheme(mode){
+        root.setAttribute('data-theme', mode);
+        // Animate thumb icon: moon for dark, sun for light
+        thumbIcon.className = 'fas ' + (mode === 'dark' ? 'fa-moon' : 'fa-sun');
+      }
+    })();
+
+    // 3D tilt on card
+    const card = document.querySelector('.card');
+    (function enableTilt(){
+      let rect; let rafId;
+      function move(e){
+        cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(()=>{
+          rect = rect || card.getBoundingClientRect();
+          const x = (e.clientX - rect.left) / rect.width - 0.5;
+          const y = (e.clientY - rect.top) / rect.height - 0.5;
+          const rx = (+y * 10).toFixed(2);
+          const ry = (-x * 12).toFixed(2);
+          card.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+        });
+      }
+      card.addEventListener('mousemove', move);
+      card.addEventListener('mouseleave', () => { rect = null; card.style.transform = 'rotateX(0) rotateY(0)'; });
+    })();
+
+    // Terminal staged reveal
+    const lines = [...document.querySelectorAll('#term-body .line')];
+    lines.forEach((el, i) => setTimeout(()=> el.classList.add('show'), 300 + i*700));
+
+    // Button ripple
+    const btn = document.getElementById('connectBtn');
+    btn.addEventListener('click', (e) => {
+      const r = e.currentTarget.getBoundingClientRect();
+      const ripple = document.createElement('span');
+      Object.assign(ripple.style, { position:'absolute', left:(e.clientX - r.left - 10)+'px', top:(e.clientY - r.top - 10)+'px', width:'20px', height:'20px', borderRadius:'50%', background:'radial-gradient(circle, rgba(255,255,255,.9), rgba(255,255,255,0))', transform:'scale(1)', opacity:'0.85', pointerEvents:'none' });
+      e.currentTarget.appendChild(ripple);
+      setTimeout(()=>{ ripple.style.transition='transform .6s ease, opacity .8s ease'; ripple.style.transform='scale(18)'; ripple.style.opacity='0'; }, 10);
+      setTimeout(()=> ripple.remove(), 820);
+    });
+
+    // Optional: set avatar image easily via JS (uncomment & set URL)
+    // document.documentElement.style.setProperty('--avatar-url', 'url(https://your-cdn/avatar.jpg)');
+  </script>
+</body>
+</html>
