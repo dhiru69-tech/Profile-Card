@@ -35,3 +35,18 @@
 ├── style.css       # Styling (animations, effects, responsiveness)
 ├── script.js       # Interactive behavior
 └── assets/         # Profile images, icons, and screenshots
+## ⚙️ Installation & Setup  
+
+Follow these steps to run the project locally 👇  
+
+```bash
+# 1️⃣ Clone this repository
+https://github.com/dhiru69-tech/Profile-card.git
+
+# 2️⃣ Navigate into the project folder
+cd Profile-card
+
+# 3️⃣ Open the project
+# Option A:  Just Download index.html  Open directly in your browser
+# Option B: Use Live Server (VS Code Extension) for auto reload
+
