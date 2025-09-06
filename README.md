@@ -13,8 +13,7 @@
 ---
 
 ## 🚀 Live Demo  
-🎥 Animated Preview (Replace with your GIF/Screenshot):  
-![Demo Animation](assets/demo.gif)  
+🎥 Click here to  Preview : https://dhiru69-tech.github.io/Profile-card/
 
 ---
 
