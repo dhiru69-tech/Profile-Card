@@ -14,6 +14,7 @@
 
 ## 🚀 Live Demo  
 🎥 Click here to  Preview : https://dhiru69-tech.github.io/Profile-card/
+<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/16e39868-14fd-445b-b8f5-0dc0d9a53117" />
 
 ---
 
