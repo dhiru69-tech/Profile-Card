@@ -50,4 +50,7 @@ cd Profile-card
 # 3️⃣ Open the project
 # Option A:  Just Download index.html  Open directly in your browser
 # Option B: Use Live Server (VS Code Extension) for auto reload
-
+```
+<p align="center">
+  <img src="https://komarev.com/ghpvc/?username=dhiru69-tech&style=flat-square&color=blue" alt=""/>
+</p>
